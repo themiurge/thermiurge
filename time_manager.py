@@ -8,11 +8,25 @@ datetime = _DT.datetime
 Timer = _TH.Timer
 _cur = datetime.now()
 _timers = []
+_ratio = 0.0
+_start = datetime.now()
 
 def _now_sim():
     return _cur
 
+def _now_ratio():
+    global _start
+    global _ratio
+    return _cur + _DT.timedelta(seconds = (datetime.now() - _start).total_seconds() * _ratio)
+
 now = datetime.now
+
+class _ratio_timer(_TH.Timer):
+
+    def __init__(self, interval, callback, args=None, kwargs=None):
+        global _ratio
+        _TH.Timer.__init__(self, interval / _ratio, callback, args, kwargs)
+
 
 class _simulated_timer:
     INITIALIZED = 1
@@ -47,9 +61,13 @@ def _wait_real(secs):
         return
     def _dummy():
         pass
-    t = Timer(secs, _dummy)
+    t = _TH.Timer(secs, _dummy)
     t.start()
     t.join()
+
+def _wait_ratio(secs):
+    global _ratio
+    _wait_real(secs / _ratio)
 
 def _wait_sim(secs):
     global _cur
@@ -63,16 +81,20 @@ def _wait_sim(secs):
 
 wait = _wait_real
 
-def set_sim(start):
+def set_sim(start, ratio = None):
     global _mode
     global _cur
     global _timers
     global Timer
     global now
     global wait
+    global _ratio
+    global _start
+    _ratio = ratio
     _mode = SIMULATED
     _cur = start
     _timers = []
-    Timer = _simulated_timer
-    now = _now_sim
-    wait = _wait_sim
+    _start = datetime.now()
+    Timer = _simulated_timer if ratio == None else _ratio_timer
+    now = _now_sim if ratio == None else _now_ratio
+    wait = _wait_sim if ratio == None else _wait_ratio
