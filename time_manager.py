@@ -5,6 +5,7 @@ REAL = 1
 SIMULATED = 2
 _mode = REAL
 datetime = _DT.datetime
+timedelta = _DT.timedelta
 Timer = _TH.Timer
 _cur = datetime.now()
 _timers = []
@@ -56,6 +57,7 @@ class _simulated_timer:
         self.callback(*(self.args), **(self.kwargs))
         self._state = _simulated_timer.STOPPED
 
+
 def _wait_real(secs):
     if secs <= 0:
         return
@@ -79,22 +81,37 @@ def _wait_sim(secs):
         timer._fire()
         _timers.remove(timer)
 
-wait = _wait_real
 
-def set_sim(start, ratio = None):
+def _wait_until_real(stop_time):
+    _wait_real((stop_time - datetime.now()).total_seconds())
+
+def _wait_until_ratio(stop_time):
+    global _ratio
+    _wait_real((stop_time - now()).total_seconds() / _ratio)
+
+def _wait_until_sim(stop_time):
+    global _cur
+    _wait_sim((stop_time - _cur).total_seconds())
+
+wait = _wait_real
+wait_until = _wait_until_real
+
+def set_sim(start = None, ratio = None):
     global _mode
     global _cur
     global _timers
     global Timer
     global now
     global wait
+    global wait_until
     global _ratio
     global _start
     _ratio = ratio
     _mode = SIMULATED
-    _cur = start
+    _cur = datetime.now() if start == None else start
     _timers = []
     _start = datetime.now()
     Timer = _simulated_timer if ratio == None else _ratio_timer
     now = _now_sim if ratio == None else _now_ratio
     wait = _wait_sim if ratio == None else _wait_ratio
+    wait_until = _wait_until_sim if ratio == None else _wait_until_ratio
