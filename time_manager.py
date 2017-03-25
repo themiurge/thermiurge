@@ -6,7 +6,6 @@ SIMULATED = 2
 _mode = REAL
 datetime = _DT.datetime
 timedelta = _DT.timedelta
-Timer = _TH.Timer
 _cur = datetime.now()
 _timers = []
 _ratio = 0.0
@@ -26,8 +25,20 @@ class _ratio_timer(_TH.Timer):
 
     def __init__(self, interval, callback, args=None, kwargs=None):
         global _ratio
+        global _timers
         _TH.Timer.__init__(self, interval / _ratio, callback, args, kwargs)
+        _timers.append(self)
 
+
+class _real_timer(_TH.Timer):
+
+    def __init__(self, interval, callback, args=None, kwargs=None):
+        global _timers
+        _TH.Timer.__init__(self, interval, callback, args, kwargs)
+        _timers.append(self)
+
+
+Timer = _real_timer
 
 class _simulated_timer:
     INITIALIZED = 1
@@ -109,9 +120,28 @@ def set_sim(start = None, ratio = None):
     _ratio = ratio
     _mode = SIMULATED
     _cur = datetime.now() if start == None else start
+    for timer in _timers:
+        timer.cancel()
     _timers = []
     _start = datetime.now()
     Timer = _simulated_timer if ratio == None else _ratio_timer
     now = _now_sim if ratio == None else _now_ratio
     wait = _wait_sim if ratio == None else _wait_ratio
     wait_until = _wait_until_sim if ratio == None else _wait_until_ratio
+
+
+def set_real():
+    global _mode
+    global _timers
+    global Timer
+    global now
+    global wait
+    global wait_until
+    _mode = REAL
+    for timer in _timers:
+        timer.cancel()
+    _timers = []
+    Timer = _real_timer
+    now = datetime.now
+    wait = _wait_real
+    wait_until = _wait_until_real
