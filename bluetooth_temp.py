@@ -1,4 +1,5 @@
 import serial
+import os
 from time import sleep
 
 # to start bletooth comm automatically:
@@ -7,6 +8,8 @@ from time import sleep
 # for each device, run
 #     sudo rfcomm bind <dev no.> <MAC address> <channel>
 # device is now /dev/rfcomm<dev no.>
+
+os.system('sudo rfcomm bind 0 00:14:03:06:0B:DD 1')
 
 REQUEST_TEMPERATURE = "REQ_TEMP"
 RESPONSE_TEMPERATURE = "RES_TEMP"
