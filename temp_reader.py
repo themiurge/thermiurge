@@ -3,6 +3,7 @@ import serial
 import glob
 import sys
 from time import sleep
+from datetime import datetime
 
 bluetooth_sensors = [(0, '00:14:03:06:0B:DD', 1, 9600, 'outside temp cold')]
 #bluetooth_sensors = [(1, '4C:74:03:63:C0:76', 2, 19200, 'outside temp warm')]
@@ -29,7 +30,7 @@ class BluetoothSensor:
                 return float(ret[len(RESPONSE_TEMPERATURE):])
             return None
         except:
-            #print(sys.exc_info()[0])
+            #print(str(sys.exc_info()[0]))
             return None
 
             
@@ -77,8 +78,10 @@ if __name__ == '__main__':
     init()
     sensors = get_all_temperature_sensors()
     while True:
-        for sensor in sensors:
-            temp = sensor.get_temp()
-            if temp is not None:
-                print(sensor.name, temp)
+        with open('temps.csv', 'a') as f:
+            for sensor in sensors:
+                temp = sensor.get_temp()
+                if temp is not None:
+                    print(sensor.name, temp)
+                    f.write("{},{},{}\n".format(datetime.now(), sensor.name, temp))
         sleep(1)
